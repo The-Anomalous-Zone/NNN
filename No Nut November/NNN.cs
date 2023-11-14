@@ -4,48 +4,34 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Exiled.API.Features;
-using Exiled.API.Enums;
-using Exiled.Events.EventArgs.Player;
-using PlayerRoles;
+using Events = Exiled.Events;
 
 namespace NNN
 {
-    public class EventHandlers
+    public class NNN : Plugin<Config>
     {
-        private List<RoleTypeId> ScpRoles = new List<RoleTypeId> 
+        public override string Name => "No Nut November";
+        public override string Author => "coollogan876";
+        public override Version Version => new Version(1, 0, 0);
+        public override Version RequiredExiledVersion => new Version(8, 3, 11);
+
+        public static NNN Singleton;
+        private EventHandlers Handler;
+
+        public override void OnEnabled()
         {
-            RoleTypeId.Scp049,
-            RoleTypeId.Scp096,
-            RoleTypeId.Scp106,
-            RoleTypeId.Scp939,
-            RoleTypeId.Scp3114,
-        };
-        private RoleTypeId GetAvailableScp()
-        {
-            RoleTypeId chosen = RoleTypeId.None;
-            ScpRoles.ShuffleList();
-            foreach (RoleTypeId r in ScpRoles)
-            {
-                if (Player.Get(r).Count() < 1)
-                {
-                    chosen = r;
-                    break;
-                }
-            }
-            if (chosen == RoleTypeId.None)
-                chosen = ScpRoles.First();
-            return chosen;
+            Singleton = this;
+            Handler = new EventHandlers();
+            Events.Handlers.Player.ChangingRole += Handler.OnChangingRole;
+            base.OnEnabled();
         }
-        public void OnChangingRole(ChangingRoleEventArgs ev)
+
+        public override void OnDisabled()
         {
-            if (ev.NewRole == RoleTypeId.Scp173 && DateTime.Now.Month == 11)
-            {
-                if (ev.Reason == SpawnReason.ForceClass && NNN.Singleton.Config.AllowForce173)
-                {
-                    return;
-                }
-                ev.NewRole = GetAvailableScp();
-            }
+            Events.Handlers.Player.ChangingRole -= Handler.OnChangingRole;
+            Singleton = null;
+            Handler = null;
+            base.OnDisabled();
         }
     }
 }
